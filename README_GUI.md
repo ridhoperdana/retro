@@ -1,145 +1,175 @@
-# Retro GUI - Desktop Application
+# Retro Web GUI
 
-Desktop GUI version of the Retro Game Package Manager.
+A beautiful web-based interface for the Retro Game Package Manager.
 
-## Running the GUI
+## 🚀 Quick Start
 
-### From Python
-
-After installing the package:
+### Installation
 
 ```bash
 pip install .
+```
+
+### Running the GUI
+
+```bash
 retro-gui
 ```
 
-Or run directly:
+Or:
 
 ```bash
-python -m retro.gui
+python3 -m retro.web_gui
 ```
 
-### Standalone Executable
+Your browser will automatically open to `http://127.0.0.1:5000`
 
-Build platform-specific executables using the build scripts (see `BUILD_INSTRUCTIONS.md`).
+## ✨ Features
 
-## Features
+### Beautiful Web Interface
+- 🎨 Modern gradient design
+- 📱 Responsive layout
+- 🌐 Works in any browser
+- ⚡ Real-time updates
 
-### Search & Install Tab
-- **Search Games**: Search for games across all systems
-- **Filter by System**: Include system name in search (e.g., "mario nes")
-- **Exclude Terms**: Use minus prefix (e.g., "sonic -demo -beta")
-- **Batch Installation**: Select multiple games and install at once
-- **Installation Status**: See which games are already installed
+### Full Functionality
+- 🔍 **Search Games**: Search across 49+ game systems
+- 📥 **Update Database**: Fetch latest game listings
+- 📚 **List Installed**: View your collection
+- ⚙️ **Install Games**: One-click installation
 
-### Installed Games Tab
-- **View Collection**: Browse all installed games by system
-- **Size Information**: See file sizes for each game
-- **Batch Removal**: Select and remove multiple games
-- **Quick Stats**: View total games and storage used
+## 🎯 Usage
 
-### Utilities Tab
-- **CHD Compression**: Convert ISO/CUE/GDI files to compressed CHD format
-- **Duplicate Removal**: Automatically remove duplicate ROMs based on region priority
-- **Console Output**: View progress and results of operations
+### 1. Update Database
+Click "Update Database" to fetch game listings from repositories.
 
-## Interface Guide
+### 2. Search for Games
+Enter search terms:
+- `mario` → All Mario games
+- `sonic genesis` → Sonic for Genesis
+- `all gba` → All GBA games
+- `zelda -demo` → Zelda excluding demos
 
-### Search Examples
+### 3. Install Games
+After searching, click "Yes" when prompted to install found games.
 
-| Search Query | Result |
-|-------------|--------|
-| `mario` | All games with "mario" in the name |
-| `mario nes` | Mario games for NES only |
-| `all snes` | All SNES games |
-| `sonic -demo` | Sonic games excluding demos |
-| `zelda -beta -prototype` | Zelda games excluding betas and prototypes |
+### 4. View Collection
+Click "List Installed" to see all your games.
 
-### Keyboard Shortcuts
+## 🖥️ System Requirements
 
-- **Enter** in search box: Perform search
-- **Click on game**: Toggle selection checkbox
+- **Python**: 3.7 or higher
+- **RAM**: 512MB minimum
+- **Browser**: Any modern browser (Chrome, Firefox, Safari, Edge)
+- **Network**: Internet connection for downloads
 
-### Settings
+## 🔧 Configuration
 
-Access via **File → Settings**:
-- **ROMs Directory**: Where games are stored (default: `~/roms`)
-- **Fetch Workers**: Number of concurrent threads for fetching (default: 10)
-- **Install Workers**: Number of concurrent downloads (default: 20)
-
-## System Requirements
-
-- **Operating System**: Windows 7+, macOS 10.12+, or Linux (any modern distro)
-- **RAM**: 2GB minimum, 4GB recommended
-- **Storage**: Varies by collection size (ROMs can be 100GB+)
-- **Internet**: Required for downloading games
-
-## Screenshots
-
-### Search & Install
-Browse and install games with real-time search filtering.
-
-### Installed Games
-Manage your collection with easy selection and removal.
-
-### Utilities
-Compress ROMs and clean duplicates to save space.
-
-## Tips
-
-1. **First Run**: Click "Update Database" to fetch game listings
-2. **Storage Management**: Use CHD compression to reduce disc-based game sizes by 50-70%
-3. **Duplicate Cleanup**: Run "Clean Duplicates" to keep only the best version of each game
-4. **Region Priority**: W (World) > E (Europe) > U (USA) > J (Japan)
-5. **Batch Operations**: Select multiple games for faster processing
-
-## Troubleshooting
-
-### GUI doesn't start
-- Check Python version: `python --version` (need 3.7+)
-- Verify tkinter is installed: `python -m tkinter`
-- On Linux: `sudo apt install python3-tk`
-
-### "Could not load systems.json"
-- Click "Update Database" to download system definitions
-- Check internet connection
-
-### Installation fails
-- Verify write permissions to ROMs directory
-- Check available disk space
-- Review console output in Utilities tab
-
-### Slow downloads
-- Adjust "Install Workers" in Settings
-- Check internet connection speed
-- Some servers may have rate limits
-
-## Advanced Usage
-
-### Custom Systems
-Edit `~/.config/retro/systems.json` to add custom game sources:
+Settings are stored in `~/.config/retro/settings.json`:
 
 ```json
 {
-  "custom_system": {
-    "name": "Custom System",
-    "format": ["rom", "bin"],
-    "url": ["https://example.com/games/"]
-  }
+  "roms_dir": "~/roms",
+  "fetch_workers": 10,
+  "install_workers": 20
 }
 ```
 
-### Portable Mode
-To run from USB drive, edit `retro/main.py` and change:
+## 📝 Examples
+
+### Search Examples
+
+| Query | Result |
+|-------|--------|
+| `mario` | All Mario games |
+| `mario nes` | Mario on NES only |
+| `all snes` | Every SNES game |
+| `sonic -demo` | Sonic, no demos |
+| `zelda gba -japan` | Zelda GBA, no JP |
+
+### Installation Flow
+
+1. Start GUI: `retro-gui`
+2. Click "Update Database"
+3. Enter "sonic genesis" in search box
+4. Click "Search"
+5. Click "Yes" to install
+6. Wait for completion
+
+## 🌐 Why Web-Based?
+
+We switched from tkinter to web-based GUI because:
+- ✅ Works on ALL systems (Windows, macOS, Linux)
+- ✅ No native GUI library issues
+- ✅ Better looking and more modern
+- ✅ Easier to maintain and update
+- ✅ Responsive and accessible
+
+## 🛠️ Troubleshooting
+
+### Port Already in Use
+
+If port 5000 is busy, edit `retro/web_gui.py`:
+
 ```python
-config_dir = os.path.expanduser("~/.config/retro")
-```
-to:
-```python
-config_dir = os.path.join(os.path.dirname(__file__), "config")
+app.run(debug=False, port=5001, host='127.0.0.1')
 ```
 
-## Legal Notice
+### Browser Doesn't Open
 
-This tool is for managing legally owned games only. Always respect copyright laws and intellectual property rights. The developers are not responsible for any misuse of this software.
+Manually visit: `http://127.0.0.1:5000`
 
+### Can't Connect
+
+Check firewall settings or try:
+```bash
+python3 -m retro.web_gui
+```
+
+Then visit `http://localhost:5000`
+
+## 🔒 Security Note
+
+The web server only listens on `127.0.0.1` (localhost), meaning it's NOT accessible from other computers on your network. It's completely safe to use.
+
+## 📱 Mobile Access (Optional)
+
+To access from mobile devices on your network:
+
+1. Edit `retro/web_gui.py`:
+   ```python
+   app.run(debug=False, port=5000, host='0.0.0.0')
+   ```
+
+2. Find your computer's IP: `ifconfig` (macOS/Linux) or `ipconfig` (Windows)
+
+3. On mobile, visit: `http://YOUR_IP:5000`
+
+**Warning**: Only do this on trusted networks!
+
+## 🎮 CLI Still Available
+
+The command-line interface is still available:
+
+```bash
+retro update
+retro search mario
+retro install sonic genesis
+retro list
+```
+
+## 📄 License
+
+MIT License - See LICENSE file
+
+## 🙏 Credits
+
+Built with:
+- **Flask** - Web framework
+- **Python** - Core language  
+- **BeautifulSoup** - HTML parsing
+- **requests** - HTTP downloads
+
+---
+
+**Enjoy managing your retro game collection! 🎮✨**

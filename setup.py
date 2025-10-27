@@ -31,12 +31,12 @@ setup(
         "beautifulsoup4",
         "py7zr",
         "rarfile",
-        "pyinstaller",
+        "flask",
     ],
     entry_points={
         "console_scripts": [
             "retro=retro.main:main",
-            "retro-gui=retro.gui:main",
+            "retro-gui=retro.web_gui:main",
         ],
     },
     include_package_data=True,
