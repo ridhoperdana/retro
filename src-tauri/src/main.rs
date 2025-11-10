@@ -158,7 +158,7 @@ fn main() {
     let port: u16 = env::var("RETRO_TAURI_PORT")
         .ok()
         .and_then(|value| value.parse().ok())
-        .unwrap_or(5000);
+        .unwrap_or(5001); // Changed from 5000 to avoid macOS Control Center conflict
     let python_cmd = env::var("RETRO_TAURI_PYTHON").unwrap_or_else(|_| "python3".to_string());
     let target_url = format!("http://{host}:{port}/");
 

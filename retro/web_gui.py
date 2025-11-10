@@ -134,7 +134,7 @@ def api_list():
     
     return jsonify({'output': output, 'status': f'{total_files} games installed'})
 
-def main(host: str = '127.0.0.1', port: int = 5000, open_browser: bool = True):
+def main(host: str = '127.0.0.1', port: int = 5001, open_browser: bool = True):
     url = f"http://{host}:{port}"
     print("🎮 Starting Retro Game Manager Web GUI...")
     print(f"📡 Server will start at: {url}")
@@ -153,7 +153,7 @@ def main(host: str = '127.0.0.1', port: int = 5000, open_browser: bool = True):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Run Retro Game Manager web GUI.")
     parser.add_argument("--host", default="127.0.0.1", help="Host address to bind the server.")
-    parser.add_argument("--port", type=int, default=5000, help="Port for the web server.")
+    parser.add_argument("--port", type=int, default=5001, help="Port for the web server.")
     parser.add_argument("--no-browser", action="store_true", help="Do not automatically open the browser.")
     args = parser.parse_args()
     main(host=args.host, port=args.port, open_browser=not args.no_browser)

@@ -90,6 +90,53 @@
             text-align: center;
             font-weight: bold;
         }
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.show {
+            display: flex;
+        }
+        .modal {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        .modal h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .modal p {
+            margin-bottom: 25px;
+            color: #666;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .modal-buttons button {
+            padding: 10px 20px;
+            font-size: 14px;
+        }
+        .btn-cancel {
+            background: #95a5a6;
+            color: white;
+        }
+        .btn-cancel:hover {
+            background: #7f8c8d;
+        }
     </style>
 </head>
 <body>
@@ -122,7 +169,48 @@ Examples:
         <div class="status-bar" id="status">Ready</div>
     </div>
     
+    <!-- Confirmation Modal -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal">
+            <h3>Confirm Installation</h3>
+            <p id="confirmMessage">Install these games?</p>
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="closeConfirm(false)">Cancel</button>
+                <button class="btn-success" onclick="closeConfirm(true)">Install</button>
+            </div>
+        </div>
+    </div>
+    
     <script>
+        let confirmCallback = null;
+        
+        function showConfirm(message, callback) {
+            document.getElementById('confirmMessage').textContent = message;
+            document.getElementById('confirmModal').classList.add('show');
+            confirmCallback = callback;
+        }
+        
+        function closeConfirm(result) {
+            document.getElementById('confirmModal').classList.remove('show');
+            if (confirmCallback) {
+                confirmCallback(result);
+                confirmCallback = null;
+            }
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('confirmModal').addEventListener('click', (e) => {
+            if (e.target.id === 'confirmModal') {
+                closeConfirm(false);
+            }
+        });
+        
+        // Close modal with Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.getElementById('confirmModal').classList.contains('show')) {
+                closeConfirm(false);
+            }
+        });
         function showLoading() {
             document.getElementById('output').innerHTML = '<div class="loading"><div class="spinner"></div><p>Loading...</p></div>';
         }
@@ -159,8 +247,12 @@ Examples:
                 document.getElementById('output').textContent = data.output;
                 setStatus(data.status);
                 
-                if (data.count > 0 && confirm(`Install ${data.count} games?`)) {
-                    await install(query);
+                if (data.count > 0) {
+                    showConfirm(`Install ${data.count} games?`, async (confirmed) => {
+                        if (confirmed) {
+                            await install(query);
+                        }
+                    });
                 }
             } catch(e) {
                 document.getElementById('output').textContent = 'Error: ' + e;
