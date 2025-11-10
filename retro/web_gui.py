@@ -1,8 +1,9 @@
 """Web-based GUI for Retro - Works on any system!"""
 
-from flask import Flask, render_template_string, request, jsonify
+from flask import Flask, render_template, request, jsonify
 import webbrowser
 import threading
+import argparse
 import os
 
 try:
@@ -13,236 +14,14 @@ except ImportError:
 app = Flask(__name__)
 mgr = Manager()
 
-HTML = '''
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Retro Game Manager</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-        .header h1 { font-size: 2.5em; margin-bottom: 10px; }
-        .header p { opacity: 0.9; font-size: 1.1em; }
-        .content { padding: 30px; }
-        .search-box {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-        }
-        input[type="text"] {
-            flex: 1;
-            min-width: 300px;
-            padding: 15px;
-            font-size: 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-        }
-        button {
-            padding: 15px 30px;
-            font-size: 16px;
-            font-weight: bold;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
-        .btn-primary:hover { background: #5568d3; transform: translateY(-2px); }
-        .btn-success {
-            background: #27ae60;
-            color: white;
-        }
-        .btn-success:hover { background: #229954; transform: translateY(-2px); }
-        .btn-info {
-            background: #3498db;
-            color: white;
-        }
-        .btn-info:hover { background: #2980b9; transform: translateY(-2px); }
-        #output {
-            background: #f8f9fa;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 20px;
-            min-height: 400px;
-            max-height: 600px;
-            overflow-y: auto;
-            font-family: 'Courier New', monospace;
-            white-space: pre-wrap;
-            line-height: 1.6;
-        }
-        .loading {
-            text-align: center;
-            padding: 20px;
-            color: #667eea;
-        }
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .status-bar {
-            background: #2c3e50;
-            color: white;
-            padding: 15px 30px;
-            text-align: center;
-            font-weight: bold;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🎮 Retro Game Manager</h1>
-            <p>Search, Download, and Manage Retro Games</p>
-        </div>
-        
-        <div class="content">
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="Enter search terms (e.g., 'mario', 'sonic genesis', 'all gba')">
-                <button class="btn-primary" onclick="search()">Search</button>
-                <button class="btn-success" onclick="updateDB()">Update Database</button>
-                <button class="btn-info" onclick="listInstalled()">List Installed</button>
-            </div>
-            
-            <div id="output">
-Welcome to Retro Game Manager!
-
-1. Click "Update Database" to fetch game listings
-2. Enter search terms and click "Search"
-3. Follow instructions to install games
-
-Examples:
-  • "mario" → All Mario games
-  • "sonic genesis" → Sonic games for Genesis
-  • "all gba" → All Game Boy Advance games
-            </div>
-        </div>
-        
-        <div class="status-bar" id="status">Ready</div>
-    </div>
-    
-    <script>
-        function log(text) {
-            document.getElementById('output').textContent += '\\n' + text;
-            document.getElementById('output').scrollTop = document.getElementById('output').scrollHeight;
-        }
-        
-        function setStatus(text) {
-            document.getElementById('status').textContent = text;
-        }
-        
-        function showLoading() {
-            document.getElementById('output').innerHTML = '<div class="loading"><div class="spinner"></div><p>Loading...</p></div>';
-        }
-        
-        async function updateDB() {
-            setStatus('Updating database...');
-            showLoading();
-            try {
-                const res = await fetch('/api/update');
-                const data = await res.json();
-                document.getElementById('output').textContent = data.output;
-                setStatus(data.status);
-            } catch(e) {
-                log('Error: ' + e);
-                setStatus('Error');
-            }
-        }
-        
-        async function search() {
-            const query = document.getElementById('searchInput').value.trim();
-            if (!query) {
-                alert('Please enter search terms');
-                return;
-            }
-            setStatus('Searching...');
-            showLoading();
-            try {
-                const res = await fetch('/api/search?q=' + encodeURIComponent(query));
-                const data = await res.json();
-                document.getElementById('output').textContent = data.output;
-                setStatus(data.status);
-                
-                if (data.count > 0 && confirm(`Install ${data.count} games?`)) {
-                    await install(query);
-                }
-            } catch(e) {
-                log('Error: ' + e);
-                setStatus('Error');
-            }
-        }
-        
-        async function install(query) {
-            setStatus('Installing...');
-            showLoading();
-            try {
-                const res = await fetch('/api/install?q=' + encodeURIComponent(query));
-                const data = await res.json();
-                document.getElementById('output').textContent = data.output;
-                setStatus(data.status);
-            } catch(e) {
-                log('Error: ' + e);
-                setStatus('Error');
-            }
-        }
-        
-        async function listInstalled() {
-            setStatus('Loading...');
-            showLoading();
-            try {
-                const res = await fetch('/api/list');
-                const data = await res.json();
-                document.getElementById('output').textContent = data.output;
-                setStatus(data.status);
-            } catch(e) {
-                log('Error: ' + e);
-                setStatus('Error');
-            }
-        }
-        
-        // Enter key to search
-        document.getElementById('searchInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') search();
-        });
-    </script>
-</body>
-</html>
-'''
-
 @app.route('/')
 def index():
-    return render_template_string(HTML)
+    return render_template('index.html')
+
+@app.route('/health')
+def health():
+    """Health check endpoint for Tauri app to verify backend is ready"""
+    return jsonify({'status': 'ok', 'message': 'Backend is ready'})
 
 @app.route('/api/update')
 def api_update():
@@ -355,19 +134,26 @@ def api_list():
     
     return jsonify({'output': output, 'status': f'{total_files} games installed'})
 
-def main():
+def main(host: str = '127.0.0.1', port: int = 5000, open_browser: bool = True):
+    url = f"http://{host}:{port}"
     print("🎮 Starting Retro Game Manager Web GUI...")
-    print("📡 Server will start at: http://127.0.0.1:5000")
-    print("🌐 Opening browser...")
-    print("\n⚠️  If browser doesn't open, manually visit: http://127.0.0.1:5000")
+    print(f"📡 Server will start at: {url}")
+    if open_browser:
+        print("🌐 Opening browser...")
+    print(f"\n⚠️  If browser doesn't open, manually visit: {url}")
     print("⏹️  Press CTRL+C to stop the server\n")
     
     # Open browser after short delay
-    threading.Timer(1.5, lambda: webbrowser.open('http://127.0.0.1:5000')).start()
+    if open_browser and os.environ.get("RETRO_GUI_NO_BROWSER", "").lower() not in {"1", "true", "yes"}:
+        threading.Timer(1.5, lambda: webbrowser.open(url)).start()
     
     # Start Flask with explicit host
-    app.run(debug=False, port=5000, host='127.0.0.1', threaded=True)
+    app.run(debug=False, port=port, host=host, threaded=True)
 
 if __name__ == '__main__':
-    main()
-
+    parser = argparse.ArgumentParser(description="Run Retro Game Manager web GUI.")
+    parser.add_argument("--host", default="127.0.0.1", help="Host address to bind the server.")
+    parser.add_argument("--port", type=int, default=5000, help="Port for the web server.")
+    parser.add_argument("--no-browser", action="store_true", help="Do not automatically open the browser.")
+    args = parser.parse_args()
+    main(host=args.host, port=args.port, open_browser=not args.no_browser)

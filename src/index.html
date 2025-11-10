@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Retro Game Manager</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(circle at top, #3a0ca3 0%, #0f172a 100%);
+        color: #e2e8f0;
+        overflow: hidden;
+      }
+      main {
+        text-align: center;
+        max-width: 420px;
+        padding: 2rem;
+        background: rgba(15, 23, 42, 0.6);
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+        z-index: 2;
+      }
+      h1 {
+        font-size: 1.8rem;
+        margin-bottom: 0.5rem;
+      }
+      p {
+        margin: 0.5rem 0;
+        line-height: 1.6;
+      }
+      .spinner {
+        margin: 1.5rem auto 0.5rem;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        border: 4px solid rgba(255, 255, 255, 0.2);
+        border-top-color: #38bdf8;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      body.loaded {
+        background: #050505;
+      }
+      body.loaded main {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="spinner" aria-hidden="true"></div>
+      <h1>Launching Retro</h1>
+      <p>Starting the embedded Python backend…</p>
+      <p>This window will switch to the app once everything is ready.</p>
+    </main>
+    <script>
+      (async () => {
+        const tauri = window.__TAURI__;
+        if (!tauri || typeof tauri.invoke !== "function") {
+          setTimeout(() => window.location.href = "http://127.0.0.1:5000/", 3000);
+          return;
+        }
+
+        try {
+          const targetUrl = await tauri.invoke("get_backend_url");
+          const splash = document.querySelector("main");
+          
+          // Show message if backend takes too long
+          setTimeout(() => {
+            if (splash.isConnected) {
+              const note = document.createElement("p");
+              note.style.marginTop = "1rem";
+              note.textContent = "Still waiting... you can open " + targetUrl + " in your browser";
+              splash.appendChild(note);
+            }
+          }, 8000);
+
+          // Force navigation after 10 seconds
+          setTimeout(() => window.location.href = targetUrl, 10000);
+
+          // Poll backend readiness
+          const poll = async () => {
+            try {
+              const ready = await tauri.invoke("check_backend_ready");
+              if (ready) {
+                window.location.href = targetUrl;
+                return;
+              }
+            } catch (err) {}
+            setTimeout(poll, 1000);
+          };
+
+          setTimeout(poll, 2000);
+        } catch (err) {}
+      })();
+    </script>
+  </body>
+</html>
