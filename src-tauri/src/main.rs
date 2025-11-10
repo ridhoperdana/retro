@@ -2,7 +2,7 @@
 
 use std::{
     env,
-    net::TcpStream,
+    net::{TcpStream, ToSocketAddrs, SocketAddr, Ipv4Addr},
     process::{Child, Command, Stdio},
     path::PathBuf,
     sync::Mutex,
@@ -15,7 +15,6 @@ struct PythonServer(Mutex<Option<Child>>);
 struct ServerConfig {
     host: String,
     port: u16,
-    address: String,
     target_url: String,
 }
 
@@ -26,12 +25,56 @@ fn get_backend_url(cfg: State<'_, ServerConfig>) -> String {
 
 #[tauri::command]
 fn check_backend_ready(cfg: State<'_, ServerConfig>) -> bool {
-    let addr = cfg.address.parse().unwrap_or_else(|_| {
-        format!("{}:{}", cfg.host, cfg.port).parse().unwrap()
-    });
+    // Resolve address using ToSocketAddrs to handle hostnames and IPs
+    let addr_str = format!("{}:{}", cfg.host, cfg.port);
     
-    // Check if port is open
-    if TcpStream::connect_timeout(&addr, std::time::Duration::from_millis(500)).is_err() {
+    // Try to resolve the address
+    let socket_addrs: Vec<SocketAddr> = match addr_str.to_socket_addrs() {
+        Ok(addrs) => addrs.collect(),
+        Err(_) => {
+            // If resolution fails, fall back to loopback
+            vec![SocketAddr::new(
+                std::net::IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+                cfg.port
+            )]
+        }
+    };
+
+    // Filter out unspecified addresses (0.0.0.0, ::) and find a reachable address
+    let mut reachable_addr: Option<SocketAddr> = None;
+    
+    for addr in socket_addrs {
+        // Skip unspecified addresses
+        match addr {
+            SocketAddr::V4(v4) => {
+                if v4.ip().is_unspecified() {
+                    continue;
+                }
+            }
+            SocketAddr::V6(v6) => {
+                if v6.ip().is_unspecified() {
+                    continue;
+                }
+            }
+        }
+        
+        // Try to connect to this address
+        if TcpStream::connect_timeout(&addr, std::time::Duration::from_millis(500)).is_ok() {
+            reachable_addr = Some(addr);
+            break;
+        }
+    }
+
+    // If no reachable address found, fall back to loopback
+    let target_addr = reachable_addr.unwrap_or_else(|| {
+        SocketAddr::new(
+            std::net::IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+            cfg.port
+        )
+    });
+
+    // Verify TCP connection
+    if TcpStream::connect_timeout(&target_addr, std::time::Duration::from_millis(500)).is_err() {
         return false;
     }
 
@@ -117,13 +160,11 @@ fn main() {
         .and_then(|value| value.parse().ok())
         .unwrap_or(5000);
     let python_cmd = env::var("RETRO_TAURI_PYTHON").unwrap_or_else(|_| "python3".to_string());
-    let address = format!("{host}:{port}");
     let target_url = format!("http://{host}:{port}/");
 
     let server_config = ServerConfig {
         host: host.clone(),
         port,
-        address: address.clone(),
         target_url: target_url.clone(),
     };
 
