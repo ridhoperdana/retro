@@ -1,0 +1,61 @@
+{
+  "$schema": "https://schema.tauri.app/config/1",
+  "build": {
+    "beforeBuildCommand": "",
+    "beforeDevCommand": "",
+    "devPath": "../src",
+    "distDir": "../src"
+  },
+  "package": {
+    "productName": "Retro Game Manager",
+    "version": "0.1.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": false,
+      "shell": {
+        "all": false,
+        "open": true
+      },
+      "window": {
+        "all": true
+      },
+      "http": {
+        "all": true,
+        "scope": ["http://127.0.0.1:5001/*", "http://localhost:5001/*"]
+      }
+    },
+    "windows": [
+      {
+        "label": "main",
+        "title": "Retro Game Manager",
+        "width": 1200,
+        "height": 800,
+        "resizable": true,
+        "fullscreen": false,
+        "center": true,
+        "url": "index.html",
+        "fileDropEnabled": false
+      }
+    ],
+    "bundle": {
+      "targets": "all",
+      "identifier": "com.retro.app"
+    },
+    "security": {
+      "csp": "default-src 'self'; connect-src 'self' http://localhost:5001 http://127.0.0.1:5001",
+      "dangerousRemoteDomainIpcAccess": [
+        {
+          "domain": "127.0.0.1",
+          "windows": ["main"],
+          "enableTauriAPI": false
+        },
+        {
+          "domain": "localhost",
+          "windows": ["main"],
+          "enableTauriAPI": false
+        }
+      ]
+    }
+  }
+}

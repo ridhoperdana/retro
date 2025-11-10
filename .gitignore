@@ -44,3 +44,27 @@ Thumbs.db
 
 # Project specific
 systems.json.backup
+
+# Node.js / npm
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+
+# Tauri
+src-tauri/target/
+src-tauri/Cargo.lock
+
+# Tauri build outputs
+*.dmg
+*.app
+*.exe
+*.msi
+*.deb
+*.AppImage
+
+# Debug/test files
+tauri-debug.log
+output.log

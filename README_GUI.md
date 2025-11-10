@@ -24,6 +24,37 @@ python3 -m retro.web_gui
 
 Your browser will automatically open to `http://127.0.0.1:5000`
 
+## 🖥️ Desktop App (Tauri)
+
+Use the new Tauri wrapper to run the same UI as a native desktop app. The Tauri shell launches the Flask server in the background and opens it inside a desktop window.
+
+### Prerequisites
+- Rust toolchain (`rustup`), plus the platform-specific build tools Tauri requires
+- Node.js 16+ with npm
+- Python 3.8+ with this package installed (`pip install .`)
+
+### First-time setup
+```bash
+npm install
+```
+
+### Run the desktop app in development
+```bash
+npm run dev
+```
+This command starts the Python backend headlessly and opens a Tauri window that points to `http://127.0.0.1:5000`.
+
+### Build a distributable bundle
+```bash
+npm run build
+```
+
+### Configuration tips
+- Set `RETRO_TAURI_PYTHON=/path/to/python` if `python3` is not on your PATH.
+- Set `RETRO_TAURI_HOST` / `RETRO_TAURI_PORT` to run the backend on a different interface or port.
+- Set `RETRO_TAURI_PROJECT_ROOT=/path/to/repo` if the Python package isn't on the default `PYTHONPATH`.
+- The backend browser auto-launch is disabled automatically.
+
 ## ✨ Features
 
 ### Beautiful Web Interface
@@ -109,10 +140,10 @@ We switched from tkinter to web-based GUI because:
 
 ### Port Already in Use
 
-If port 5000 is busy, edit `retro/web_gui.py`:
+If port 5000 is busy, start the server on a different port:
 
-```python
-app.run(debug=False, port=5001, host='127.0.0.1')
+```bash
+python3 -m retro.web_gui --port 5001
 ```
 
 ### Browser Doesn't Open
